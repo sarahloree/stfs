@@ -31,12 +31,12 @@
 [functions]
   node_bundler = "esbuild"
 
-# /reorderengine (no slash) must reach reorderengine/index.html.
-[[redirects]]
-  from = "/reorderengine"
-  to = "/reorderengine/"
-  status = 301
-  force = true
+# Do not add a redirect between /reorderengine and /reorderengine/.
+# Netlify matches those paths as the same rule, so a forced 301 from one
+# to the other redirects the URL to itself (ERR_TOO_MANY_REDIRECTS).
+# Pretty URLs, on by default, already serves reorderengine/index.html.
+# Page assets and the data function use absolute paths (/stfd-auth.js,
+# /.netlify/functions/reorder-data), so they do not depend on the slash.
 
 [[headers]]
   for = "/*"
