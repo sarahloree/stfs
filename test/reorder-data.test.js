@@ -108,9 +108,9 @@ test("reorder data gate", async () => {
     assert.match(toml, /functions\s*=\s*"netlify\/functions"/);
     assert.match(toml, /SECRETS_SCAN_OMIT_KEYS\s*=\s*"[^"]*STFD_SUPABASE_ANON_KEY/);
     assert.match(toml, /SECRETS_SCAN_OMIT_PATHS\s*=\s*"test\/\*\*"/);
-    assert.match(toml, /from\s*=\s*"\/reorderengine"/);
-    assert.match(toml, /to\s*=\s*"\/reorderengine\/"/);
-    assert.match(toml, /status\s*=\s*301/);
+    assert.doesNotMatch(toml, /from\s*=\s*"\/reorderengine"/);
+    assert.doesNotMatch(toml, /to\s*=\s*"\/reorderengine\/"/);
+    assert.doesNotMatch(reorder + "\n" + hub + "\n" + authJs, /location\.(href|replace|assign)/);
     assert.doesNotMatch(toml, /asklightspeed\.netlify\.app\/:splat/);
     assert.doesNotMatch(toml, /to\s*=\s*"https:\/\/asklightspeed/);
 
