@@ -1,0 +1,46 @@
+# STFS tools site (https://stfs.netlify.app).
+#
+# Link this GitHub repo to that Netlify site before deploying.
+# Drag-and-drop deploys will not pick up the function or the env vars.
+#
+# Site settings > Environment variables, set BEFORE merging:
+#   STFD_SUPABASE_URL         https://qdfwovnhlaaocgawukto.supabase.co
+#   STFD_SUPABASE_ANON_KEY    STFD publishable key (also in stfd-auth.js)
+#   REORDER_ALLOWED_EMAILS    comma-separated rollout list (optional)
+#   STFS_SUPABASE_URL         STFS project URL
+#   STFS_SUPABASE_SERVICE_KEY STFS secret or service_role key (server only)
+# If STFD_SUPABASE_URL or STFD_SUPABASE_ANON_KEY is missing, every
+# reorder request returns 503. If the STFS URL or service key is missing,
+# the same.
+#
+# Ask Lightspeed stays on https://asklightspeed.netlify.app. Do not proxy
+# /asklightspeed/* onto this site: that app calls /.netlify/functions/ask
+# from the host root, so a prefix rewrite would load the page and miss
+# the function.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  # The STFD URL and publishable key are in stfd-auth.js on purpose.
+  SECRETS_SCAN_OMIT_KEYS = "STFD_SUPABASE_URL,STFD_SUPABASE_ANON_KEY"
+  # Tests use stand-in tokens. They are not deploy secrets.
+  SECRETS_SCAN_OMIT_PATHS = "test/**"
+
+[functions]
+  node_bundler = "esbuild"
+
+# /reorderengine (no slash) must reach reorderengine/index.html.
+[[redirects]]
+  from = "/reorderengine"
+  to = "/reorderengine/"
+  status = 301
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
