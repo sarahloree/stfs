@@ -16,11 +16,13 @@
 # HQ handoff (/.netlify/functions/stfs-hq-redeem) needs these as well.
 # Password sign-in and reorder keep working when they are unset; the
 # handoff then fails closed and the password form stays up.
-#   HQ_STFS_HANDOFF_SECRET    value PJCJ checks as x-handoff-secret
+#   HQ_HANDOFF_SECRET         sent as x-handoff-secret. The function POSTs
+#                             { code, business: "STFS" } to
+#                             https://inmodrxuivjmypzvygzi.supabase.co/functions/v1/hq-handoff-consume
 #   PJCJ_ANON_KEY             PJCJ publishable key, sent as apikey
 #   STFD_SUPABASE_SERVICE_KEY STFD service_role or sb_secret_ key for
 #                             qdfwovnhlaaocgawukto. Not the STFS data key.
-#   HQ_CONSUME_URL            optional; defaults to the PJCJ consume function
+#   HQ_CONSUME_URL            optional override of that consume URL
 #
 # Ask Lightspeed stays on https://asklightspeed.netlify.app. Do not proxy
 # /asklightspeed/* onto this site: that app calls /.netlify/functions/ask

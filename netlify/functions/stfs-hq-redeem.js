@@ -16,7 +16,7 @@
 // an unknown email or a user who is not on the list.
 //
 // Set before HQ sign-in will succeed. Password sign-in does not use these:
-//   HQ_STFS_HANDOFF_SECRET     shared with PJCJ, sent as x-handoff-secret
+//   HQ_HANDOFF_SECRET          shared with PJCJ, sent as x-handoff-secret
 //   PJCJ_ANON_KEY              PJCJ publishable key, sent as apikey
 //   STFD_SUPABASE_SERVICE_KEY  STFD service_role or sb_secret_ key
 //   STFD_SUPABASE_URL          https://qdfwovnhlaaocgawukto.supabase.co
@@ -105,7 +105,7 @@ function usableKey(raw, rejectPublishable) {
 }
 
 function readConfig() {
-  const secret = String(process.env.HQ_STFS_HANDOFF_SECRET || "").trim();
+  const secret = String(process.env.HQ_HANDOFF_SECRET || "").trim();
   const pjcjAnon = usableKey(process.env.PJCJ_ANON_KEY, false);
   const consumeUrl = resolveConsumeUrl(process.env.HQ_CONSUME_URL);
   const stfdOrigin = httpsOrigin(process.env.STFD_SUPABASE_URL);

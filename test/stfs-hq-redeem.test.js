@@ -10,7 +10,7 @@ const CONSUME = "https://inmodrxuivjmypzvygzi.supabase.co/functions/v1/hq-handof
 const STFD = "https://qdfwovnhlaaocgawukto.supabase.co";
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const ENV_KEYS = [
-  "HQ_STFS_HANDOFF_SECRET",
+  "HQ_HANDOFF_SECRET",
   "PJCJ_ANON_KEY",
   "HQ_CONSUME_URL",
   "STFD_SUPABASE_URL",
@@ -22,7 +22,7 @@ const ENV_KEYS = [
 function setEnv(extra) {
   for (const key of ENV_KEYS) delete process.env[key];
   Object.assign(process.env, {
-    HQ_STFS_HANDOFF_SECRET: "shared-secret",
+    HQ_HANDOFF_SECRET: "shared-secret",
     PJCJ_ANON_KEY: "pjcj-anon",
     HQ_CONSUME_URL: "",
     STFD_SUPABASE_URL: STFD + "/",
@@ -92,7 +92,7 @@ test("hq redeem mints a session only for an allowed existing user", async () => 
     assert.match(authJs, /\/\.netlify\/functions\/stfs-hq-redeem/);
     assert.match(authJs, /setSession/);
     assert.doesNotMatch(authJs, /inmodrxuivjmypzvygzi/);
-    assert.doesNotMatch(authJs, /HQ_STFS_HANDOFF_SECRET|STFD_SUPABASE_SERVICE_KEY|x-handoff-secret/);
+    assert.doesNotMatch(authJs, /HQ_HANDOFF_SECRET|STFD_SUPABASE_SERVICE_KEY|x-handoff-secret/);
     assert.doesNotMatch(authJs, /location\.(href|replace|assign)/);
     assert.match(authJs, /params\.has\("handoff"\)/);
     assert.doesNotMatch(authJs, /[?&]code=/);
@@ -106,7 +106,7 @@ test("hq redeem mints a session only for an allowed existing user", async () => 
     assert.match(source, /business:\s*BUSINESS/);
     assert.match(reorder, /exports\.hasReorderApp\s*=\s*hasReorderApp/);
     assert.match(reorder, /exports\.emailAllowed\s*=\s*emailAllowed/);
-    assert.match(toml, /HQ_STFS_HANDOFF_SECRET/);
+    assert.match(toml, /HQ_HANDOFF_SECRET/);
     assert.match(toml, /PJCJ_ANON_KEY/);
     assert.match(toml, /STFD_SUPABASE_SERVICE_KEY/);
     assert.match(toml, /HQ_CONSUME_URL/);
@@ -126,7 +126,7 @@ test("hq redeem mints a session only for an allowed existing user", async () => 
     res = await post({ code: "a".repeat(42) + "+" });
     assert.equal(res.statusCode, 401);
 
-    setEnv({ HQ_STFS_HANDOFF_SECRET: "" });
+    setEnv({ HQ_HANDOFF_SECRET: "" });
     res = await post({ code: CODE });
     assert.equal(res.statusCode, 401);
     assert.equal(calls.length, 0);
