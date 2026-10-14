@@ -214,6 +214,9 @@ async function readViews(cfg) {
   return out;
 }
 
+exports.hasReorderApp = hasReorderApp;
+exports.emailAllowed = emailAllowed;
+
 exports.handler = async (event) => {
   if (!event || event.httpMethod !== "GET") return json(405, { error: "GET only" });
 

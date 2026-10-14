@@ -1,12 +1,41 @@
 /* STFD sign-in shared by the STFS hub and the Reorder Engine.
    The publishable key only identifies the project; it is safe in the browser.
-   The Netlify function verifies the access token server-side. */
+   The Netlify function verifies the access token server-side.
+
+   HQ handoff: Johns Enterprises may open this site with #handoff=CODE.
+   The name is "handoff" so it cannot collide with supabase-js
+   detectSessionInUrl, which reads #access_token and ?code. The fragment
+   is removed before the client starts, then stfs-hq-redeem mints a normal
+   STFD session. Any failure leaves the current session, or the password
+   form. Password sign-in is unchanged. */
 (function () {
   const STFD_URL = "https://qdfwovnhlaaocgawukto.supabase.co";
   const STFD_KEY = "sb_publishable_PPhYAvIRNnzv7E86s8yw-g_ltVx0Gvk";
   let onSignedIn = null;
   let onSignedOut = null;
   let auth = null;
+
+  // Taken and removed before createClient. detectSessionInUrl may clear the
+  // hash, and a later request must not carry the one-time code. Other hash
+  // params stay so a recovery or invite link still works.
+  const HANDOFF_CODE = (function () {
+    try {
+      const raw = (location.hash || "").replace(/^#/, "");
+      if (!raw) return "";
+      const params = new URLSearchParams(raw);
+      if (!params.has("handoff")) return "";
+      const code = params.get("handoff") || "";
+      params.delete("handoff");
+      const rest = params.toString();
+      const nextUrl = location.pathname + (location.search || "") + (rest ? "#" + rest : "");
+      try { history.replaceState(history.state, "", nextUrl); }
+      catch { return ""; }
+      if (!/^[A-Za-z0-9_-]{43}$/.test(code)) return "";
+      return code;
+    } catch {
+      return "";
+    }
+  })();
 
   try {
     if (window.supabase && window.supabase.createClient) {
@@ -39,7 +68,67 @@
     document.head.appendChild(style);
   }
 
+  let handoffReady = Promise.resolve();
+
+  async function redeemHandoff(code) {
+    if (!auth) return null;
+    const ctrl = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
+    try {
+      const res = await fetch("/.netlify/functions/stfs-hq-redeem", {
+        method: "POST",
+        cache: "no-store",
+        redirect: "error",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ code: code }),
+        signal: ctrl ? ctrl.signal : undefined,
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data || typeof data.access_token !== "string" || typeof data.refresh_token !== "string") return null;
+      if (!data.access_token || !data.refresh_token) return null;
+      const set = await auth.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (!set || set.error || !set.data || !set.data.session) return null;
+      return set.data.session;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // A recovery or invite link is setting a password. Leave that session alone.
+  function passwordSetupHash() {
+    try {
+      const raw = (location.hash || "").replace(/^#/, "");
+      if (!raw) return false;
+      const type = new URLSearchParams(raw).get("type") || "";
+      return type === "recovery" || type === "invite";
+    } catch {
+      return false;
+    }
+  }
+
+  if (HANDOFF_CODE && auth && !passwordSetupHash()) {
+    handoffReady = redeemHandoff(HANDOFF_CODE).then(function () {}, function () {});
+  }
+
+  async function whenHandoffSettled() {
+    let timer;
+    try {
+      await Promise.race([
+        handoffReady,
+        new Promise(function (resolve) { timer = setTimeout(resolve, 9000); }),
+      ]);
+    } catch { /* password sign-in still works */ }
+    finally { clearTimeout(timer); }
+  }
+
   async function accessToken() {
+    await whenHandoffSettled();
     if (!auth) return "";
     let data;
     try { ({ data } = await auth.auth.getSession()); }
@@ -117,6 +206,7 @@
   }
 
   async function showWho() {
+    await whenHandoffSettled();
     if (!auth) return showSignIn("Sign-in is unavailable right now.");
     let email = "";
     try {
