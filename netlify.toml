@@ -13,6 +13,15 @@
 # reorder request returns 503. If the STFS URL or service key is missing,
 # the same.
 #
+# HQ handoff (/.netlify/functions/stfs-hq-redeem) needs these as well.
+# Password sign-in and reorder keep working when they are unset; the
+# handoff then fails closed and the password form stays up.
+#   HQ_STFS_HANDOFF_SECRET    value PJCJ checks as x-handoff-secret
+#   PJCJ_ANON_KEY             PJCJ publishable key, sent as apikey
+#   STFD_SUPABASE_SERVICE_KEY STFD service_role or sb_secret_ key for
+#                             qdfwovnhlaaocgawukto. Not the STFS data key.
+#   HQ_CONSUME_URL            optional; defaults to the PJCJ consume function
+#
 # Ask Lightspeed stays on https://asklightspeed.netlify.app. Do not proxy
 # /asklightspeed/* onto this site: that app calls /.netlify/functions/ask
 # from the host root, so a prefix rewrite would load the page and miss
